@@ -1,5 +1,10 @@
+"""
+An algorithm for randomly generating and solving 
+(inefficiently) mathy marriage problems
+"""
+
 import random
-# random.seed(10)
+random.seed(11)
 
 class Operation:
     def __init__(self, function, name):
@@ -13,46 +18,44 @@ class Operation:
         return self.function(x, y)
 
 class Woman:
-    def __init__(self, value, string_representation, index):
+    def __init__(self, value, string_representation, index, original_value=None):
         self.value = value
         self.string = string_representation
         self.matched = None
         self.index = index
+        if original_value == None:
+            self.original_value = value
+        else:
+            self.original_value = original_value
     
     @classmethod
     def copy(cls, prev_woman, operation, num):
+        if operation.name == "/" and prev_woman.value % num != 0:
+            raise ZeroDivisionError 
         value = operation.apply(prev_woman.value, num)
         if ' ' in prev_woman.string:
             string = '({0}) {1} {2}'.format(prev_woman.string, operation.name, num)
         else:
             string = '{0} {1} {2}'.format(prev_woman.string, operation.name, num)
-        return Woman(value, string, prev_woman.index)
+        return Woman(value, string, prev_woman.index, original_value=prev_woman.original_value)
 
     def __str__(self):
-        return 'women {0} matched with man {1}: {2}'.format(self.index, self.matched, self.string)
+        return 'woman {0} matched with man {1}: {2}'.format(self.original_value, self.value, self.string)
 
 
 operations = [
                 Operation(lambda x, y: x + y, "+"),
                 Operation(lambda x, y: x * y, "*"),
                 Operation(lambda x, y: x - y, "-"),
-                Operation(lambda x, y: x // y, "//"),
+                Operation(lambda x, y: x // y, "/"),
                 # Operation(lambda x, y: x ** y, "**"),
              ]
 
-# We will say True if a solution exists, and False otherwise
-
 def helper(women, men, numbers):
-    """
-    # IDEA: We will look at every single possible first "move"
-    We will look at every pair of numbers, and every operation between those two numbers
-    then, using recursion, we will have a 3 element list, and then use magic!
-    """
     assert len(women) == len(men)
+
     # SUCCESS CASE
     index = None
-
-    # go through each woman, and find the first unmatched woman
     for i, w in enumerate(women):
         if w.matched is not None:
             continue
@@ -72,7 +75,6 @@ def helper(women, men, numbers):
     if not numbers:
         return
 
-    # let us iterate first through every number and operation
     for j in range(len(numbers)):
         w = women[index]
         num = numbers[j]
@@ -85,38 +87,34 @@ def helper(women, men, numbers):
             except ZeroDivisionError:
                 continue
 
-def generate_randomly2(length=4):
-    options = 0
-    ctr = 0
-    sols = 0
-    while sols == 0 or sols > 20:
+def generate_between_25(length=3, nums_length=4):
+    ctr, sols = 0, 0
+    while sols != 1:
         ctr += 1
-        numbers = [random.randint(2, 8) for _ in range(2 * length - length // 2)]
-        women = [random.randint(1, 25) for _ in range(length)]
-        men = [random.randint(1, 25) for _ in range(length)]
+        numbers = random.choices(list(range(1, 8)), k = nums_length)
+        options = list(range(1, 25))
+        random.shuffle(options)
+        women = options[:length]
+        men = options[length:length * 2]
 
         w, m, n = women[:], men[:], numbers[:]
         sols = len(set(helper(preprocess(w, m), m, n)))
-        print("ctr: ", ctr, "| solutions: ", sols)
 
     return women, men, numbers
 
-def generate_randomly(length=4):
-    options = 0
+def generate_men_through_operations(length=2):
     ctr = 0
     sols = 100
     while ctr < 10 and sols > 20:
         ctr += 1
-        numbers = [random.randint(2, 8) for _ in range(2 * length - length // 2)]
+        numbers = [random.randint(2, 8) for _ in range(length * 2)]
         women = [random.randint(1, 25) for _ in range(length)]
         men = women[:]
-        # print(men)
 
         for num in numbers:
             man_index = random.randint(0, length - 1)
             man = men[man_index]
             men[man_index] = random.choice(operations).apply(man, num) 
-            # print(men)
 
         w, m, n = women[:], men[:], numbers[:]
         sols = len(set(helper(preprocess(w, m), m, n)))
@@ -140,15 +138,33 @@ def solve(women, men, numbers):
     print('-' * 10)
     print("women: ", women)
     print("men:", men)
-    print("numbers:", numbers)    
-    # preprocessing step, if any men are already equal, match them!
-    
-    print("Possible solutions: ")
+    print("numbers:", numbers)        
+    print("Solution: ")
     for ans in set(helper(preprocess(women, men), men, numbers)):
         print(ans)
         print() 
     print('-' * 10)
 
+def website_solve(women, men, numbers, i):
+    print('**Puzzle {}:**'.format(i))
+    print('```python')
+    print('women: ', women)
+    print('men: ', men)
+    print('numbers: ', numbers)
+    print('```')
+    print('<details>') 
+    print('<summary>')
+    print('Solution:')
+    print('</summary>')
+    print()
+    print('{% highlight ruby %}')
+    for ans in set(helper(preprocess(women, men), men, numbers)):
+        print(ans)
+    print('{% endhighlight %}')
+    print()
+    print('</details>') 
+    print('---')
+    print()
 
-solve(*generate_randomly2())
-# solve([10, 5, 15], [11, 15, 33], [8, 7, 1])
+for i in range(1, 11):
+    website_solve(*generate_between_25(2, 3), i)
