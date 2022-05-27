@@ -28,4 +28,4 @@ Observe that:
 - Each number in `numbers` is used at most once, e.g. the only time the `2` is used is in the operation `22 - 2`. Most solutions will require all to be used, but some may not!
 - Each woman is matched to a unique man who doesn't necessarily appear at the same index as her. 
 
-Without further ado, here are some challenges. Grab some paper and a pencil and enjoy! Note that each puzzle only has one solution.
+To see some challenges, visit [sohumh.github.io/projects/mathy_marriage](https://sohumh.github.io/projects/mathy_marriage/)
